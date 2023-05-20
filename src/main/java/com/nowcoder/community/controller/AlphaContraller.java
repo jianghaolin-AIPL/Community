@@ -1,8 +1,11 @@
 package com.nowcoder.community.controller;
 
 import com.nowcoder.community.service.AlphaService;
+import com.nowcoder.community.util.CommunityUtil;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -144,4 +147,58 @@ public class AlphaContraller {
         return list;
     }
 
+    // cookie示例
+
+    @RequestMapping(path = "/cookie/set", method = RequestMethod.GET)
+    @ResponseBody
+    public String setCookie(HttpServletResponse response) {  // 要把cookie传到response里(在响应头部),在响应的时候才会传给浏览器
+        // 创建cookie
+        Cookie cookie = new Cookie("code", CommunityUtil.generateUUID()); // Cookie没有无参构造器
+        // 设置cookie生效的范围（对哪些访问路径生效，不然对所有路径都生效的话，其实有些是不需要的）
+        cookie.setPath("/community/alpha"); // cookie只有在这个路径和他的子路径下生效
+        // cookie默认存到浏览器内存里，浏览器关掉就失效，可以设置生效时间，存到硬盘里，让cookie长期有效
+        // 设置cookie的生存时间
+        cookie.setMaxAge(60 * 10); // 60秒*10=10分钟
+        // 发送cookie
+        response.addCookie(cookie);
+
+        return "set cookie"; // 这个不是重点
+    }
+
+    @RequestMapping(path = "/cookie/get", method = RequestMethod.GET)
+    @ResponseBody
+    // 如何得到cookie，cookie由浏览器返回到服务器是在request里，声明request对象 .getCookie就能得到所有Cookie
+    // 但这样很麻烦，得到的是cookie数组，还得从中遍历去找
+    // 如果想从众多的cookie中找到某一个key所对应的cookie，可通过注解实现
+    public String getCookie(@CookieValue("code") String code) {
+        System.out.println(code);
+        return "get cookie";
+    }
+
+    // session示例
+
+    @RequestMapping(path = "/session/set", method = RequestMethod.GET)
+    @ResponseBody
+    public String setSession(HttpSession session) {
+        session.setAttribute("id", 1);
+        session.setAttribute("name", "Test");
+        return "set session";
+    }
+
+    @RequestMapping(path = "/session/get", method = RequestMethod.GET)
+    @ResponseBody
+    public String getSession(HttpSession session) { // session通过Spring MVC注入，不用去声明
+        System.out.println(session.getAttribute("id"));
+        System.out.println(session.getAttribute("name"));
+        return "get session";
+    }
+
+    // ajax示例
+    @RequestMapping(path = "/ajax", method = RequestMethod.POST)
+    @ResponseBody
+    public String testAjax(String name, int age) {
+        System.out.println(name);
+        System.out.println(age);
+        return CommunityUtil.getJSONString(0, "操作成功！");
+    }
 }
